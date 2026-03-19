@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modern QR code generator – text, URL, email, phone, WiFi. Instant preview, dark mode, download.">
+  <meta name="author" content="GenQR">
+  <meta name="theme-color" content="#4f46e5">
+  <title>GenQR · modern generator</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234f46e5'%3E%3Cpath d='M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10-2h2v2h-2v-2zm0 4h2v2h-2v-2zm4-8h2v2h-2v-2zm0 4h2v2h-2v-2z'/%3E%3C/svg%3E" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400..700;1,14..32,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* style.css – modern glass + card design */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      transition: background-color 0.3s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    :root {
+      --bg-gradient: linear-gradient(145deg, #f6f9fc 0%, #eef2f5 100%);
+      --card-bg: rgba(255,255,255,0.7);
+      --card-border: rgba(255,255,255,0.5);
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --input-bg: rgba(255,255,255,0.8);
+      --input-border: #e2e8f0;
+      --shadow: 0 20px 35px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.02);
+      --accent: #4f46e5;
+      --accent-soft: #6366f1;
+      --btn-hover: #4338ca;
+      --toast-bg: #1e293b;
+      --toast-text: #f8fafc;
+    }
+    body.dark {
+      --bg-gradient: linear-gradient(145deg, #0b1120 0%, #121826 100%);
+      --card-bg: rgba(18,24,38,0.8);
+      --card-border: rgba(255,255,255,0.06);
+      --text-primary: #f1f5f9;
+      --text-secondary: #a0aec0;
+      --input-bg: #1e293b;
+      --input-border: #334155;
+      --shadow: 0 25px 40px -12px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+      --accent: #818cf8;
+      --accent-soft: #6366f1;
+      --btn-hover: #a5b4fc;
+      --toast-bg: #e2e8f0;
+      --toast-text: #0f172a;
+    }
+    body {
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      margin: 0;
+    }
+    .glass-card {
+      max-width: 1300px;
+      width: 100%;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 2.5rem;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      padding: 2rem 2rem 2.5rem;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .logo h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--accent), #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+    .theme-toggle {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 3rem;
+      padding: 0.4rem;
+      width: 3.2rem;
+      display: flex;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.03);
+    }
+    .theme-toggle i {
+      font-size: 1.3rem;
+      margin: auto;
+      color: var(--text-primary);
+    }
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 2rem;
+    }
+    @media (max-width: 900px) {
+      .grid-container {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+    }
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .input-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: rgba(0,0,0,0.02);
+      padding: 0.5rem;
+      border-radius: 2rem;
+      border: 1px solid var(--input-border);
+    }
+    .type-btn {
+      background: transparent;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 2rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .type-btn i { font-size: 1rem; }
+    .type-btn.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 6px 14px rgba(79, 70, 229, 0.3);
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .input-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--text-secondary);
+      margin-left: 0.5rem;
+    }
+    .field-with-icon {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .field-with-icon i {
+      position: absolute;
+      left: 16px;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+    .field-with-icon input, .field-with-icon select, .field-with-icon textarea {
+      width: 100%;
+      padding: 0.9rem 1rem 0.9rem 2.8rem;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 2rem;
+      font-size: 1rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: 0.2s;
+    }
+    .field-with-icon textarea {
+      min-height: 80px;
+      resize: vertical;
+      border-radius: 1.8rem;
+    }
+    .field-with-icon input:focus, .field-with-icon select:focus, .field-with-icon textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+    .wifi-group {
+      display: flex;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .wifi-group .field-with-icon {
+      flex: 1 1 120px;
+    }
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin: 0.5rem 0 0.2rem;
+    }
+    .btn {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 2.5rem;
+      padding: 0.7rem 1.4rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: 0.15s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .btn-primary i { color: white; }
+    .btn:hover {
+      background: var(--accent-soft);
+      color: white;
+      border-color: var(--accent-soft);
+    }
+    .btn:hover i { color: white; }
+    .qr-panel {
+      background: var(--input-bg);
+      border-radius: 2rem;
+      padding: 1.8rem 1.5rem;
+      border: 1px solid var(--input-border);
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.02);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .qr-display {
+      background: white;
+      padding: 1rem;
+      border-radius: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 12px 25px -10px rgba(0,0,0,0.2);
+      min-height: 260px;
+    }
+    #qrCanvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 1rem;
+      image-rendering: crisp-edges;
+      display: block;
+    }
+    .size-options, .color-options, .ecc-options {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .size-btn {
+      background: transparent;
+      border: 1px solid var(--input-border);
+      border-radius: 2rem;
+      padding: 0.4rem 1.2rem;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+    .size-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    input[type="color"] {
+      width: 50px;
+      height: 40px;
+      border-radius: 1rem;
+      border: 1px solid var(--input-border);
+      background: transparent;
+      cursor: pointer;
+    }
+    .history-strip {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+    }
+    .history-item {
+      width: 50px;
+      height: 50px;
+      background: white;
+      border-radius: 12px;
+      border: 2px solid var(--input-border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: var(--toast-bg);
+      color: var(--toast-text);
+      padding: 0.9rem 1.8rem;
+      border-radius: 3rem;
+      font-weight: 500;
+      box-shadow: 0 20px 30px -10px black;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.25s;
+      pointer-events: none;
+      z-index: 999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .loader {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .footer-note {
+      margin-top: 2rem;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="glass-card">
+    <div class="header-row">
+      <div class="logo"><h1><i class="fas fa-qrcode" style="margin-right: 8px;"></i>GenQR</h1></div>
+      <div class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></div>
+    </div>
+    <div class="grid-container">
+      <div class="input-section">
+        <div class="input-tabs" id="typeTabs">
+          <button class="type-btn active" data-type="text"><i class="fas fa-font"></i> Text</button>
+          <button class="type-btn" data-type="url"><i class="fas fa-link"></i> URL</button>
+          <button class="type-btn" data-type="email"><i class="fas fa-envelope"></i> Email</button>
+          <button class="type-btn" data-type="phone"><i class="fas fa-phone"></i> Phone</button>
+          <button class="type-btn" data-type="wifi"><i class="fas fa-wifi"></i> WiFi</button>
+        </div>
+
+        <div id="dynamicFields"></div>
+        <div id="inputError" style="color: #ef4444; font-size: 0.9rem; margin: 0 0 0.5rem 0;">&nbsp;</div>
+
+        <div class="action-buttons">
+          <button class="btn" id="copyDataBtn"><i class="far fa-copy"></i> Copy data</button>
+          <button class="btn" id="clearBtn"><i class="fas fa-undo-alt"></i> Reset</button>
+        </div>
+
+        <div style="margin-top: 0.8rem;">
+          <span class="badge"><i class="fas fa-history"></i> recent</span>
+          <div class="history-strip" id="historyStrip"></div>
+        </div>
+      </div>
+
+      <div class="qr-panel">
+        <div class="qr-display" id="qrDisplay">
+          <canvas id="qrCanvas"></canvas>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+          <div class="size-options">
+            <span class="badge">Size</span>
+            <button class="size-btn" data-size="150">S</button>
+            <button class="size-btn active" data-size="250">M</button>
+            <button class="size-btn" data-size="350">L</button>
+          </div>
+
+          <div class="color-options">
+            <span class="badge">Color</span>
+            <input type="color" id="fgColor" value="#000000">
+            <i class="fas fa-arrow-right" style="color:var(--text-secondary);"></i>
+            <input type="color" id="bgColor" value="#FFFFFF">
+          </div>
+
+          <div class="ecc-options">
+            <span class="badge">Error correction</span>
+            <select id="eccSelect" class="btn" style="padding: 0.5rem 1rem;">
+              <option value="L">L (7%)</option>
+              <option value="M" selected>M (15%)</option>
+              <option value="Q">Q (25%)</option>
+              <option value="H">H (30%)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="downloadBtn"><i class="fas fa-download"></i> PNG</button>
+            <button class="btn" id="shareBtn"><i class="fas fa-share-alt"></i> Share</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">⚡ real‑time · glass · private</div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('qrCanvas');
+      const typeTabs = document.querySelectorAll('.type-btn');
+      const dynamicFields = document.getElementById('dynamicFields');
+      const inputError = document.getElementById('inputError');
+      const themeToggle = document.getElementById('themeToggle');
+      const fgColorInput = document.getElementById('fgColor');
+      const bgColorInput = document.getElementById('bgColor');
+      const eccSelect = document.getElementById('eccSelect');
+      const copyBtn = document.getElementById('copyDataBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const shareBtn = document.getElementById('shareBtn');
+      const historyStrip = document.getElementById('historyStrip');
+      const sizeBtns = document.querySelectorAll('.size-btn');
+      const toast = document.getElementById('toast');
+
+      let currentType = 'text';
+      let qrSize = 250;
+      let qrHistory = JSON.parse(localStorage.getItem('qrHistory')) || [];
+      let lastGeneratedText = '';
+      let loading = false;
+      let currentQRImageData = null; // store the generated QR code data URL
+
+      function showToast(msg, duration = 2500) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), duration);
+      }
+
+      function updateHistoryStrip() {
+        let html = '';
+        qrHistory.slice(-6).forEach(item => {
+          html += `<div class="history-item" title="${item.text}">📌</div>`;
+        });
+        historyStrip.innerHTML = html || '<span style="color:var(--text-secondary)">No history</span>';
+        
+        document.querySelectorAll('.history-item').forEach((el, idx) => {
+          el.addEventListener('click', () => {
+            let histItem = qrHistory.slice(-6)[idx];
+            if(histItem) populateFromHistory(histItem);
+          });
+        });
+      }
+
+      function populateFromHistory(item) {
+        if(currentType === 'wifi') {
+          // simplistic - just set main fields if possible
+          let ssid = document.getElementById('wifiSsid');
+          if(ssid) ssid.value = item.text.substring(0, 20);
+        } else {
+          let inp = document.getElementById('mainInput');
+          if(inp) inp.value = item.text;
+        }
+        generateQR();
+        showToast('loaded from history');
+      }
+
+      function addToHistory(text, type) {
+        if(!text.trim()) return;
+        qrHistory.push({ text: text.substring(0,30), type, full: text, date: Date.now() });
+        if(qrHistory.length > 15) qrHistory.shift();
+        localStorage.setItem('qrHistory', JSON.stringify(qrHistory));
+        updateHistoryStrip();
+      }
+
+      function generateQR() {
+        if(loading) return;
+        let rawData = getCurrentInputData();
+        if(!rawData) {
+          inputError.innerHTML = '⚠️ Please enter data';
+          return;
+        }
+        
+        let validationError = validateInput(currentType, rawData);
+        if(validationError) {
+          inputError.innerHTML = validationError;
+          return;
+        } else {
+          inputError.innerHTML = '';
+        }
+
+        loading = true;
+        const qrDisplay = document.querySelector('.qr-display');
+        qrDisplay.innerHTML = `<div style="padding:3rem;"><span class="loader"></span> generating</div>`;
+        
+        setTimeout(() => {
+          try {
+            const fg = fgColorInput.value;
+            const bg = bgColorInput.value;
+            const ecc = eccSelect.value;
+
+            QRCode.toCanvas(document.createElement('canvas'), rawData, { 
+              width: qrSize,
+              margin: 2,
+              color: { dark: fg, light: bg },
+              errorCorrectionLevel: ecc
+            }, (err, qrCanvas) => {
+              loading = false;
+              
+              if(err) {
+                qrDisplay.innerHTML = `<canvas id="qrCanvas"></canvas>`;
+                inputError.innerHTML = 'QR error – invalid data?';
+                return;
+              }
+              
+              // Clear and create fresh canvas
+              qrDisplay.innerHTML = '';
+              const newCanvas = document.createElement('canvas');
+              newCanvas.id = 'qrCanvas';
+              newCanvas.width = qrSize;
+              newCanvas.height = qrSize;
+              const ctx = newCanvas.getContext('2d');
+              
+              // Fill background first
+              ctx.fillStyle = bg;
+              ctx.fillRect(0, 0, qrSize, qrSize);
+              
+              // Draw the QR code on top
+              ctx.drawImage(qrCanvas, 0, 0, qrSize, qrSize);
+              
+              qrDisplay.appendChild(newCanvas);
+              
+              // Store the image data for download
+              currentQRImageData = newCanvas.toDataURL('image/png');
+              lastGeneratedText = rawData;
+              addToHistory(rawData, currentType);
+            });
+          } catch (e) {
+            loading = false;
+            inputError.innerHTML = 'Invalid content';
+            qrDisplay.innerHTML = `<canvas id="qrCanvas"></canvas>`;
+          }
+        }, 80);
+      }
+
+      function validateInput(type, val) {
+        if(!val.trim()) return 'Field cannot be empty';
+        if(type === 'url') {
+          if(!val.match(/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/.*)?$/i)) return 'Invalid URL';
+        }
+        if(type === 'email') {
+          if(!val.includes('@') || !val.includes('.')) return 'Invalid email';
+        }
+        if(type === 'phone') {
+          if(!val.match(/^[\+]?[\d\s\-\(\)]{7,}$/)) return 'Invalid phone number';
+        }
+        return null;
+      }
+
+      function getCurrentInputData() {
+        if(currentType === 'wifi') {
+          let ssid = document.getElementById('wifiSsid')?.value || '';
+          let pass = document.getElementById('wifiPass')?.value || '';
+          let enc = document.getElementById('wifiEnc')?.value || 'WPA';
+          if(!ssid) return '';
+          return `WIFI:S:${ssid};T:${enc};P:${pass};;`;
+        } else {
+          return document.getElementById('mainInput')?.value || '';
+        }
+      }
+
+      function renderFields() {
+        let html = '';
+        if(currentType === 'wifi') {
+          html = `
+            <div class="input-group"><label>WiFi network</label>
+              <div class="wifi-group">
+                <div class="field-with-icon"><i class="fas fa-wifi"></i><input type="text" id="wifiSsid" placeholder="SSID" class="dynamic-input" value="DemoNet"></div>
+                <div class="field-with-icon"><i class="fas fa-lock"></i><input type="text" id="wifiPass" placeholder="Password" class="dynamic-input" value="pass1234"></div>
+                <div class="field-with-icon"><i class="fas fa-shield"></i><select id="wifiEnc" class="dynamic-input"><option value="WPA">WPA/WPA2</option><option value="WEP">WEP</option><option value="nopass">None</option></select></div>
+              </div>
+            </div>`;
+        } else {
+          let placeholder = 'Type something...';
+          let defaultValue = 'hello world';
+          if(currentType === 'url') { placeholder = 'https://example.com'; defaultValue = 'https://example.com'; }
+          if(currentType === 'email') { placeholder = 'name@domain.com'; defaultValue = 'hello@example.com'; }
+          if(currentType === 'phone') { placeholder = '+123456789'; defaultValue = '+123456789'; }
+          
+          html = `
+            <div class="input-group"><label>${currentType}</label>
+              <div class="field-with-icon"><i class="fas fa-pencil-alt"></i><textarea id="mainInput" class="dynamic-input" placeholder="${placeholder}" rows="3">${defaultValue}</textarea></div>
+            </div>`;
+        }
+        dynamicFields.innerHTML = html;
+        attachInputListeners();
+        setTimeout(generateQR, 20);
+      }
+
+      function attachInputListeners() {
+        document.querySelectorAll('.dynamic-input').forEach(el => el.addEventListener('input', generateQR));
+      }
+
+      sizeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          sizeBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          qrSize = parseInt(btn.dataset.size);
+          generateQR();
+        });
+      });
+
+      typeTabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          typeTabs.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentType = btn.dataset.type;
+          renderFields();
+        });
+      });
+
+      fgColorInput.addEventListener('input', generateQR);
+      bgColorInput.addEventListener('input', generateQR);
+      eccSelect.addEventListener('change', generateQR);
+
+      copyBtn.addEventListener('click', () => {
+        let data = getCurrentInputData();
+        if(data) { navigator.clipboard?.writeText(data).then(() => showToast('Copied!')); }
+        else showToast('Nothing to copy', 1500);
+      });
+
+      clearBtn.addEventListener('click', () => {
+        if(confirm('Reset fields?')) {
+          if(currentType === 'wifi') {
+            let ssid = document.getElementById('wifiSsid');
+            let pass = document.getElementById('wifiPass');
+            if(ssid) ssid.value = '';
+            if(pass) pass.value = '';
+          } else {
+            let inp = document.getElementById('mainInput');
+            if(inp) inp.value = '';
+          }
+          generateQR();
+        }
+      });
+
+      downloadBtn.addEventListener('click', () => {
+        const qrCanvas = document.getElementById('qrCanvas');
+        if(!qrCanvas) {
+          showToast('No QR code to download');
+          return;
+        }
+        
+        try {
+          // Create a download link from the canvas directly
+          const link = document.createElement('a');
+          link.download = `qrcode-${Date.now()}.png`;
+          link.href = qrCanvas.toDataURL('image/png');
+          link.click();
+          showToast('QR downloaded ✓');
+        } catch (e) {
+          showToast('Download failed');
+          console.error(e);
+        }
+      });
+
+      shareBtn.addEventListener('click', async () => {
+        const qrCanvas = document.getElementById('qrCanvas');
+        if(!qrCanvas) return;
+        
+        try {
+          const blob = await new Promise(resolve => qrCanvas.toBlob(resolve));
+          if(navigator.share) {
+            await navigator.share({ 
+              title: 'QR code', 
+              files: [new File([blob], 'qr.png', { type: 'image/png' })] 
+            }).catch(() => {});
+          } else {
+            showToast('Share not supported');
+          }
+        } catch (e) {
+          showToast('Share failed');
+        }
+      });
+
+      themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('dark');
+        const icon = themeToggle.querySelector('i');
+        icon.classList.toggle('fa-moon');
+        icon.classList.toggle('fa-sun');
+      });
+
+      renderFields();
+      updateHistoryStrip();
+    })();
+  </script>
+</body>
+</html>
